@@ -1,0 +1,385 @@
+---
+title: "Data Analysis Skill Test"
+author: "Francisco Jucelino Matos Junior"
+date: "04/07/2020"
+output: pdf_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Pacotes a serem utilizados
+
+```{r}
+library(pwt8)
+library(forecast)
+library(tseries)
+library(lmtest)
+library(lattice)
+library(lubridate)
+library(ggplot2)
+```
+
+#  Case 1
+
+## Lendo o conjunto de dados 
+
+```{r, echo = FALSE}
+case1_data = read.table("TFP.csv", head = T, sep = ",", dec = ".")
+```
+
+## Análise Exploratória
+
+Inicialmente, farei uma análise indivídual da série temporal de cada país.
+
+### USA
+
+Dados apenas dos EUA
+
+```{r}
+data_usa = subset(case1_data, case1_data$isocode == "USA") 
+```
+
+Criamos uma série temporal da variável rtfpna apenas dos dados dos EUA
+
+```{r}
+serie_usa = ts(data.frame(rtfpna = data_usa$rtfpna), start = 1950)
+```
+
+Gráfico da série temporal da variável rtfpna para os dados americanos
+
+```{r}
+plot(serie_usa, col='blue',
+     main='Dados Americanos',
+     xlab='Ano')
+```
+
+Observando o gráfico, de modo geral, podemos ver um crescimento nos preços nacionais americanos no decorrer dos últimos 60 anos.
+
+### Canadá
+
+Dados apenas do Canadá
+
+```{r}
+data_canada = subset(case1_data, case1_data$isocode == "CAN") 
+```
+
+Criamos uma série temporal da variável rtfpna apenas dos dados dos Canadá
+
+```{r}
+serie_canada = ts(data.frame(rtfpna = data_canada$rtfpna), start = 1950)
+```
+
+Gráfico da série temporal da variável rtfpna para os dados canadenses
+
+```{r}
+plot(serie_canada, col='red',
+     main='Dados Canadenses',
+     xlab='Ano')
+```
+
+Observando o gráfico, pode-se afirmar que houve um crescimento nos preços nacionais até os anos 70, em seguida houve, de modo geral, uma queda nos preços até o ínicio dos anos 90. Seguimos com um alta dos preços nacionais até os anos 2000, seguido por uma queda até o ano de 2011.
+
+### México
+
+Dados apenas dos México
+
+```{r}
+data_mexico = subset(case1_data, case1_data$isocode == "MEX") 
+```
+
+Criamos uma série temporal da variável rtfpna apenas dos dados dos México
+
+```{r}
+serie_mexico = ts(data.frame(rtfpna = data_mexico$rtfpna), start = 1950)
+```
+
+Gráfico da série temporal da variável rtfpna para os dados mexicanos
+
+```{r}
+plot(serie_mexico, col='green',
+     main='Dados Mexicanos',
+     xlab='Ano')
+```
+
+Observando o gráfico, temos que os preços nacionais no México seguiram em alta até os anos 80, em que, em seguida, vem tendo um comportamento descrecente.
+
+O Gráfico a seguir apresenta as séries temporais da variável rtfpna para os três países em estudo.
+
+```{r}
+par(mfrow = c(3,1))
+plot(serie_usa, col='blue',
+     main='Dados Americanos',
+     xlab='Ano') 
+plot(serie_canada, col='red',
+     main='Dados Canadenses',
+     xlab='Ano') 
+plot(serie_mexico, col='green',
+     main='Dados Mexicanos',
+     xlab='Ano') 
+```
+
+Comparando as três séries dos preços nacioanis dos EUA, Canadá e México, podemos observar que, os EUA vem seguindo com um crescimento graudal dos seus preços, em quanto que, o Canadá, apesar de possuir uma série de altas de seus preços, a partir dos anos 2000, observa-se uma queda gradual desses preços. No México, por outro lado, teve sua época de aumento de seu preço nacional até o ínicio dos anos 80, para em seguida, iniciar uma queda gradual de seus preços.
+
+## Previões para os próximos 10 anos
+
+Inicialmente, precisaremos modelar os dados. Opto por uma modelagem individual da série temporal de cada país. Estimarei um modelo ARIMA para os dados do preço nacional usando a função auto.arima().
+
+### USA
+
+Inicialmente, ajusto o modelo e mostraremos as estimativas para o mesmo
+```{r}
+modelo_usa <- auto.arima(data_usa$rtfpna)
+summary(modelo_usa)
+```
+
+Neste caso, o modelo ajustado é um ARIMA(0,1,0). A seguir, apresenta-se o gráfico com a previsão e seu intervalo de confiança. A previsão informa que o preço nacional nos EUA continuará nos próximos 10 anos.
+
+```{r}
+previsao_usa <- forecast(modelo_usa, h = 10) # previsão para os próximos 10 anos
+autoplot(previsao_usa, ylab = "rtfpna", xlab = "Tempo")
+```
+
+Calculando o MASE do modelo. Podemos ver que o MASE para esse modelo é de 0,7997, indicando que modelo pode não estar muito bem ajustado.
+
+```{r, }
+accuracy(previsao_usa)[1,][6] 
+```
+
+### Canadá
+
+Inicialmente, ajusto o modelo e mostraremos as estimativas para o mesmo
+```{r}
+modelo_canada <- auto.arima(data_canada$rtfpna)
+summary(modelo_canada)
+```
+
+Neste caso, o modelo ajustado é um ARIMA(0,2,3). A previsão informa uma queda no preço nacional do Canadá, entretanto, nota-se que o intervalo de confiança é bastante largo, para as previões, indicando que o nosso modelo pode não estar bem adequado.
+
+```{r}
+previsao_canada <- forecast(modelo_canada, h = 10) # previsão para os próximos 10 anos
+autoplot(previsao_canada, ylab = "rtfpna", xlab = "Tempo")
+```
+
+Calculando o MASE do modelo. Podemos ver que o MASE para esse modelo é de 0,8848, indicando que modelo pode não estar muito bem ajustado
+
+```{r}
+accuracy(previsao_canada)[1,][6] 
+```
+
+### México
+
+Inicialmente, ajusto o modelo e mostraremos as estimativas para o mesmo
+```{r}
+modelo_mexico <- auto.arima(data_mexico$rtfpna)
+summary(modelo_mexico)
+```
+
+Neste caso, o modelo ajustado é um ARIMA(0,2,1). A previsão informa uma queda no preço nacional do México, entretanto, nota-se que o intervalo de confiança é bastante largo, para as previões, indicando que o nosso  modelo pode não estar bem adequado.
+
+```{r}
+previsao_mexico <- forecast(modelo_mexico, h = 10) # previsão para os próximos 10 anos
+autoplot(previsao_mexico, ylab = "rtfpna", xlab = "Tempo")
+```
+
+Calculando o MASE do modelo.Podemos ver que o MASE para esse modelo é de 1,0042, indicando que modelo pode não estar muito bem ajustado
+
+```{r}
+accuracy(previsao_canada)[1,][6] 
+```
+
+
+Como alternativa para melhorar o ajuste dos modelos, poderíamos inserir regressores, de tal forma a melhorar a explicação dos dados sobre o preço nacional. Poderíamos utilizar alguma ferramenta de mineração de dados afim de reduzir o conjunto de novas variáveis a serem adicionadas e, em seguida, adiciona-las ao modelo e, desta forma, torna-lo mais informativo em relação ao comportamento da variável rtfpna.
+
+# Case 2
+
+## Lendo o conjunto de dados 
+
+```{r, echo = FALSE}
+case2_data = read.table("data_comexstat.csv", head = T, sep = ",", dec = ".")
+```
+
+Criarei uma variável auxiliar $anos$ com o objetivo de codificar a variáveil date em anos. 
+
+```{r}
+anos = year(as_date(case2_data$date))
+```
+
+### Análises
+
+Primeiramente, analisaremos o comportamento da exportações totais mensais e anuais do Brasil de soja, óleo de soja e farelo de soja. O Gráfico a seguir apresenta as toneladas totais mensais e anuais para cada um dos produtos acima.
+
+```{r}
+produtos = c("soybean_meal", "soybean_oil",  "soybeans")
+total_meses = sapply(produtos, function(i){
+  aux = subset(case2_data, product == i, select = c("tons","date"))
+  aux$date = month(as_date(aux$date))
+  tapply(aux$tons, as.factor(aux$date), function(x) sum(x, na.rm = T))
+  })
+aux = data.frame(toneladas = c(total_meses), meses = rep(1:12,3), produto = rep(produtos,each = 12))
+p = ggplot(data=aux, aes(x=meses, y=toneladas, colour=produto)) +
+  geom_line(aes(color = produto))+
+  geom_point(aes(color = produto))
+p + labs(colour = "Product", y = "Tonnes", x = "Month")
+```
+
+```{r}
+total_anos = sapply(produtos, function(j) sapply(levels(factor(anos)), function(i){
+    aux = c(subset(case2_data, product == j & anos == as.numeric(i) & 
+          type == "Export", select = tons))$tons
+    if(sum(aux) == 0){return(0)} else return(sum(aux, na.rm = T))})) 
+aux = data.frame(toneladas = c(total_anos), anos = rep(min(anos):max(anos),3), produto = rep(produtos,each = max(anos)-min(anos) + 1))
+p = ggplot(data=aux, aes(x=anos, y=toneladas, colour=produto)) +
+  geom_line(aes(color = produto))+
+  geom_point(aes(color = produto))
+p + labs(colour = "Product", y = "Tonnes", x = "Year")
+```    
+
+Observando os gráficos acima, podemos afirmar ...
+    
+Dentre os produtos exportados pelo Brasil nos últimos 5 anos, podemos destacar, como os mais exportados, os seguites produtos:
+
+```{r, echo= FALSE}
+data_last_5years = subset(case2_data, anos > 2014 & case2_data$type == "Export", select = c("tons","product"))
+media_product = tapply(data_last_5years$tons, data_last_5years$product, sum)
+```
+```{r}
+sort(media_product, decreasing = T)[1:3]
+```
+
+Observando os dados de exportação de milho, temos que os principais tipos de rota de comércio que o Brasil tem adotado são:
+
+```{r}
+data_corn = subset(case2_data, product == "corn" & type == "Export", select = "route")$route
+sort(table(data_corn), decreasing = T)
+```
+
+O Gráfico a seguir apresenta as toneladas exportadas de cada um dos produtos por cada uma das rotas mencionadas anteriormente. Observando o gráfico, podemos observar que, para todos os produtos, a prevalência das rotas de transporte se mantêm a mesma. Em particular, podemos destacar que, grande parte da toneladas exportadas dos produtos é relazida por rotas marítimas. 
+
+```{r}
+data_export = subset(case2_data, type == "Export", select = c("product","route","tons"))
+produtos = levels(factor(data_export$product))
+rotas = levels(factor(data_export$route))
+```
+```{r , fig.height = 6, fig.width = 10, fig.align = "center"}
+xyplot(tons ~ factor(route) | factor(product), data = data_export, ylab = "Tonnes", xlab = "Route")
+```
+Avaliando os países que são parceiros comerciais do Brasil, no que diz respeito ao comércio de milho e açúcar nos últimos 3 anos, os países a seguir representam os países com maiores toneladas comercilizadas de milho e açúcar, respectivamente. 
+
+```{r}
+produtos = c("corn", "sugar")
+paises = levels(factor(case2_data$country))
+total_prod_paises = sapply(produtos, function(i) sapply(paises, function(j){
+  aux = subset(case2_data, product == i & anos > 2016 & country == j, select = c("tons"))
+  if(sum(aux$tons) == 0){return(0)} else{return(sum(aux$tons, na.rm = T))}
+}))
+sort(total_prod_paises[,1], decreasing = T)[1:3]
+sort(total_prod_paises[,2], decreasing = T)[1:3]
+```
+
+Agora, avaliaremos a quantidade de toneladas exportadas de cada produção em relação aos estados objetificando destacar os cinco estados líderes em exportação de cada um dos produtos. Desta forma, a Tabela a seguir apresenta os 5 estados com maiores toneladas de exportação para cada um dos produtos. 
+
+```{r}
+data_export = subset(case2_data, type == "Export", select = c("tons","state","product"))
+produtos = levels(factor(case2_data$product))
+estados_produtos = sapply(produtos, function(i){
+aux = subset(data_export, product == i, select = c("tons","state"))
+return(names(sort(tapply(aux$tons, aux$state, mean), decreasing = T)[1:5]))
+})
+estados_produtos
+```
+
+### Modelagem
+
+Para modelar os dados, optei por ajustar um modelo para cada um dos produtos em estudo e, em seguida, realizar a previsão da quantidade de exportações nos próximos 11 anos para cada um dos produtos. Os dados a serem utilizados são as quantidades totais de toneladas exportadas de cada produto por ano. Primeiramente, realizarei o ajuste do modelo sem as covariadas. 
+
+```{r}
+produtos = c("soybeans","corn","soybean_meal")
+paises = c("China","Iran","Netherlands","Spain","Thailand","Egypt","Japan","Vietnam")
+covariaveis = read.table("covariates.csv", head = T, sep = ";", dec = ",")
+```
+
+Note que, para todos os produtos, a medida de acurácia da previsão, MASE, são bastante elevadas, desta forma, temos indicios que o nosso modelo não está bem ajustado e, consequemente, não nos fornecerá boas previsões. Como uma forma de aumentar o poder preditivo do modelo, inseri as covariáveis descritas em covariates (.xlsx) no modelo.
+
+#### Milho 
+
+Criando a série de dados e o ajustando o modelo ARIMA para os dados de exportação anual de milho e mostraremos as estimativas para o mesmo. Neste caso, o modelo ajustado é um ARIMA(0,1,1) e sua MASE 0,7477, indicando um modelo com pouco poder preditivo.
+
+```{r}
+dados_export_corn = subset(case2_data, type = "Export", product == "corn", select = c("date","tons"))
+corn_year = ts(sapply(min(anos):max(anos), function(i){
+  aux = subset(dados_export_corn, year(as_date(dados_export_corn$date)) == i, select = "tons")
+  if(sum(aux$tons) == 0){return(NA)} else{return(sum(aux$tons, na.rm = T))}
+}), start = 1997)
+modelo_corn = auto.arima(corn_year, stepwise = T)
+summary(modelo_corn)
+previsao_corn <- forecast(modelo_corn) 
+autoplot(previsao_corn, ylab = "Tonnes", xlab = "Year") 
+```
+A seguir, apresento o modelo, suas estimativas e medidas, assim como um Gráfico apresentando as estimativas para os próximos 11 anos do total de toneladas de milho exportada. Por fim, ficamos com um modelo ARIMA(0,0,0), o que nos indicou que o modelo apenas com as covariadas é o melhor modelo, no que diz respeito as métricas de AIC, AICC, BIC e MASE.
+
+```{r}
+X_reg =  as.matrix(subset(covariaveis, year >= min(anos) & year <= max(anos))[,-c(1,2,4)])
+X_previsao = as.matrix(subset(covariaveis, year > max(anos))[,-c(1,2,4)])
+modelo_corn = auto.arima(corn_year, xreg = X_reg, stepwise = T)
+summary(modelo_corn) 
+previsao_corn <- forecast(modelo_corn, xreg = X_previsao) 
+autoplot(previsao_corn, ylab = "Tonnes", xlab = "Year") 
+```
+
+#### Soja 
+
+Criando a série de dados e o ajustando o modelo ARIMA para os dados de exportação anual de soja e mostraremos as estimativas para o mesmo. Neste caso, o modelo ajustado é um ARIMA(0,1,1) e sua MASE 0,7433, indicando um modelo com pouco poder preditivo.
+
+```{r}
+dados_export_soybean = subset(case2_data, type = "Export", product == "soybeans", select = c("date","tons"))
+soybean_year = ts(sapply(min(anos):max(anos), function(i){
+  aux = subset(dados_export_soybean, year(as_date(dados_export_soybean$date)) == i, select = "tons")
+  if(sum(aux$tons) == 0){return(NA)} else{return(sum(aux$tons, na.rm = T))}
+}), start = 1997)
+modelo_soybean = auto.arima(soybean_year, stepwise = T)
+summary(modelo_soybean)
+previsao_soybean <- forecast(modelo_soybean) 
+autoplot(previsao_soybean, ylab = "Tonnes", xlab = "Year") 
+```
+A seguir, apresento o modelo, suas estimativas e medidas, assim como um Gráfico apresentando as estimativas para os próximos 11 anos do total de toneladas de soja exportada. Por fim, ficamos com um modelo ARIMA(0,0,0), o que nos indicou que o modelo apenas com as covariadas é o melhor modelo, no que diz respeito as métricas de AIC, AICC, BIC e MASE.
+
+```{r}
+X_reg =  as.matrix(subset(covariaveis, year >= min(anos) & year <= max(anos))[,-c(1,3,4)])
+X_previsao = as.matrix(subset(covariaveis, year > max(anos))[,-c(1,3,4)])
+modelo_soybean = auto.arima(soybean_year, xreg = X_reg, stepwise = T)
+summary(modelo_soybean) 
+previsao_soybean <- forecast(modelo_soybean, xreg = X_previsao) 
+autoplot(previsao_soybean, ylab = "Tonnes", xlab = "Year") 
+```
+
+#### farelo de soja 
+
+Criando a série de dados e o ajustando o modelo ARIMA para os dados de exportação anual de farelo de soja e mostraremos as estimativas para o mesmo. Neste caso, o modelo ajustado é um ARIMA(0,1,1) e sua MASE 0,7704, indicando um modelo com pouco poder preditivo.
+
+```{r}
+dados_export_soybean_meal = subset(case2_data, type = "Export", product == "soybean_meal", select = c("date","tons"))
+soybean_meal_year = ts(sapply(min(anos):max(anos), function(i){
+  aux = subset(dados_export_soybean_meal, year(as_date(dados_export_soybean_meal$date)) == i, select = "tons")
+  if(sum(aux$tons) == 0){return(NA)} else{return(sum(aux$tons, na.rm = T))}
+}), start = 1997)
+modelo_soybean_meal = auto.arima(soybean_meal_year, stepwise = T)
+summary(modelo_soybean_meal)
+previsao_soybean_meal <- forecast(modelo_soybean_meal) 
+autoplot(previsao_soybean_meal, ylab = "Tonnes", xlab = "Year") 
+```
+
+A seguir, apresento o modelo, suas estimativas e medidas, assim como um Gráfico apresentando as estimativas para os próximos 11 anos do total de toneladas de farelo de soja exportada. Por fim, ficamos com um modelo ARIMA(0,0,0), o que nos indicou que o modelo apenas com as covariadas é o melhor modelo, no que diz respeito as métricas de AIC, AICC, BIC e MASE. 
+
+```{r}
+X_reg =  as.matrix(subset(covariaveis, year >= min(anos) & year <= max(anos))[,-c(1,2,3)])
+X_previsao = as.matrix(subset(covariaveis, year > max(anos))[,-c(1,2,3)])
+modelo_soybean_meal = auto.arima(soybean_meal_year, xreg = X_reg, stepwise = T)
+summary(modelo_soybean_meal) 
+previsao_soybean_meal <- forecast(modelo_soybean_meal, xreg = X_previsao) 
+autoplot(previsao_soybean_meal, ylab = "Tonnes", xlab = "Year") 
+```
+
+Pode-se notar que, com a inclusão das covariáveis no modelo, podemos obter melhores previsões para o  total de toneladas exportadas dos produtos. 
